@@ -27,14 +27,15 @@ import { ITEM_MENU } from "../constant";
 
 const data = [
   {
+    id: 1,
     name: "Inicio",
     icon: <HomeOutlined />,
   },
-  { name: "Listado de Colaboradores", icon: <ListAltOutlined /> },
-  { name: "Ingreso de Colaboradores", icon: <PersonAddAlt1Outlined /> },
-  { name: "Modificación Colaborador", icon: <BorderColorOutlined /> },
-  { name: "Ingreso de expedientes", icon: <BackupOutlined /> },
-  { name: "Exportación de Colaboradores", icon: <FileDownloadOutlined /> }
+  { id: 2, name: "Listado de Colaboradores", icon: <ListAltOutlined /> },
+  { id: 3, name: "Ingreso de Colaboradores", icon: <PersonAddAlt1Outlined /> },
+  { id: 4, name: "Modificación Colaborador", icon: <BorderColorOutlined /> },
+  { id: 5, name: "Ingreso de expedientes", icon: <BackupOutlined /> },
+  { id: 6, name: "Exportación de Colaboradores", icon: <FileDownloadOutlined /> }
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -67,7 +68,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </ListItem>
       <Divider />
       {data.map((item: any, index: number) => (
-        <ListItemButton key={index} sx={{ minHeight: 60 }} selected={( itemMenu == index ) ? true : false  } onClick={ () => handleClickItem(index) } >
+        <ListItemButton key={item.id} sx={{ minHeight: 60 }} selected={( itemMenu == index ) ? true : false  } onClick={ () => handleClickItem(index) } >
           <ListItemIcon>{item.icon}</ListItemIcon>
           <ListItemText primary={item.name} />
         </ListItemButton>
