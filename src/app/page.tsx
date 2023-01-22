@@ -1,13 +1,22 @@
 "use client";
 
-import { Box, Grid, Typography, OutlinedInput, InputAdornment, IconButton, Button } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Typography,
+  TextField,
+  OutlinedInput,
+  InputAdornment,
+  IconButton,
+  Button,
+} from "@mui/material";
 import * as yup from "yup";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 // ** Icons Imports
-import {EyeOutline, EyeOffOutline} from 'mdi-material-ui'
-
+import { EyeOutline, EyeOffOutline } from "mdi-material-ui";
+import { instanceAxiosPropia } from '../pages/axios/index';
 
 const schema = yup.object().shape({
   Username: yup.string().required("Ingrese un username valido"),
@@ -20,12 +29,11 @@ interface IInputForm {
 }
 
 export default function Login() {
-  const [errorMsg, setErrorMsg] = useState<boolean>(true);
+  const [errorMsg, setErrorMsg] = useState<boolean>(false);
   const [verPass, setVerPass] = useState<boolean>(false);
 
   const {
     control,
-    setError,
     handleSubmit,
     formState: { errors },
   } = useForm<IInputForm>({
@@ -33,8 +41,15 @@ export default function Login() {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: IInputForm) => {
-    console.log(data);
+  const onSubmit = async (dataForm: IInputForm) => {
+    setErrorMsg(false)
+    const { data, status } = await  instanceAxiosPropia.post('/login', dataForm);
+    if( status == 200){
+      console.log(data)
+    }else{
+      setErrorMsg(true)
+      console.log(data)
+    }
   };
 
   return (
@@ -61,12 +76,11 @@ export default function Login() {
                 display: "flex",
                 flexDireccion: "column",
                 pt: 5,
-                pr:5,
-                textAlign: "center",
+                pr: 5,
               }}
             >
               <Grid item xs={12}>
-                <Box sx={{ height: "100%", width: "100%" }}>
+                <Box sx={{ height: "100%", width: "100%", textAlign:'center' }}>
                   <Typography variant="h2">Gestor de Personas</Typography>
                 </Box>
               </Grid>
@@ -90,7 +104,9 @@ export default function Login() {
                       textAlign: "center",
                     }}
                   >
-                    <Typography variant="h6" color='red'>Crendeciales Invalidas</Typography>
+                    <Typography variant="h6" color="red">
+                      Crendeciales Invalidas
+                    </Typography>
                   </Box>
                 </Grid>
               ) : null}
@@ -100,15 +116,16 @@ export default function Login() {
                   name="Username"
                   control={control}
                   defaultValue={""}
+                  rules={{ required: true }}
                   render={({ field: { value, onChange } }) => (
-                    <OutlinedInput
+                    <TextField
                       fullWidth
                       label="Nombre de Usuario"
                       onChange={onChange}
                       value={value}
                       error={Boolean(errors.Username)}
                       placeholder="Nombre de Usuario"
-                      autoComplete='false'
+                      autoComplete="false"
                     />
                   )}
                 />
@@ -118,33 +135,42 @@ export default function Login() {
                   name="Password"
                   control={control}
                   defaultValue={""}
-                  render={({ field: { value, onChange } }) => (
-                    <OutlinedInput
+                  rules={{ required: true }}
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextField
                       fullWidth
+                      onBlur={onBlur}
                       label="Contraseña"
                       onChange={onChange}
                       value={value}
                       error={Boolean(errors.Username)}
                       placeholder="Contraseña"
-                      autoComplete='false'
-                      type={ verPass ? "text" : "password"}
-                      endAdornment={
-                        <InputAdornment position='end'>
-                          <IconButton
-                            edge='end'
-                            onMouseDown={e => e.preventDefault()}
-                            onClick={() => setVerPass(!verPass)}
-                          >
-                            {verPass ? <EyeOutline /> : <EyeOffOutline />}
-                          </IconButton>
-                        </InputAdornment>
-                      }
+                      autoComplete="false"
+                      type={verPass ? "text" : "password"}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => setVerPass(!verPass)}
+                            >
+                              {verPass ? <EyeOutline /> : <EyeOffOutline />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
                     />
                   )}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Button variant="contained" color="primary" sx={{ width:'100%', height:'56px'}}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ width: "100%", height: "56px" }}
+                  type='submit'
+                >
                   Ingresar
                 </Button>
               </Grid>
