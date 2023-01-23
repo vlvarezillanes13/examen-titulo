@@ -7,13 +7,12 @@ const index = async (req: NextApiRequest, res: NextApiResponse) => {
     const credenciales: ICredencialesAcceso = req.body;
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
     const { data, status } = await instanceAxiosApi.post(
-      "/Autenticacion/Acceso",
+      "/Autenticacion/ObtenerToken",
       credenciales
     );
-    console.log("status",status)
     return (data)
       ? res.status(200).json(data)
-      : res.status(201).end("Error al ingresar");
+      : res.status(status).end("Error al ingresar");
   } catch (err: any) {
     return res.status(err.status || 500).end(err.message);
   }
