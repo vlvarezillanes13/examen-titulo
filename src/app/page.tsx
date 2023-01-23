@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from 'next/navigation'
 import {
   Box,
   Grid,
@@ -14,10 +15,9 @@ import * as yup from "yup";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation'
 // ** Icons Imports
 import { EyeOutline, EyeOffOutline } from "mdi-material-ui";
-import { instanceAxiosPropia } from "../pages/axios/index";
+import { instanceAxiosPropia } from "./helpers/axios/index";
 import { IUsuario } from './interfaces';
 import { USER_DATA, ITEM_MENU } from './constant/index';
 
@@ -68,7 +68,6 @@ export default function Login() {
   };
 
   useEffect(() => {
-    router.prefetch('/home')
     reset()
     window.localStorage.removeItem(USER_DATA);
     window.localStorage.removeItem(ITEM_MENU);

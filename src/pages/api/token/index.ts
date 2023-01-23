@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ICredencialesAcceso } from "../../../app/interfaces/ICredencialesAcceso.interface";
-import { instanceAxiosApi } from "../../axios/index";
+import { instanceAxiosApi } from "../../../app/helpers/axios/index";
 
 const index = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
