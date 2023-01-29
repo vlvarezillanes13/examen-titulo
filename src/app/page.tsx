@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from 'next/navigation'
 import {
   Box,
   Grid,
@@ -17,10 +16,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useState, useEffect } from "react";
 // ** Icons Imports
 import { EyeOutline, EyeOffOutline } from "mdi-material-ui";
-import { instanceAxiosPropia } from "./helpers/axios/index";
-import { IUsuario } from './interfaces';
-import { USER_DATA, ITEM_MENU } from './constant/index';
+import { useAuth } from './hook/useAuth';
 
+ 
 const schema = yup.object().shape({
   Username: yup.string().required("Ingrese un username valido"),
   Password: yup.string().required("Ingrese su contraseña"),
@@ -35,7 +33,7 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState<boolean>(false);
   const [verPass, setVerPass] = useState<boolean>(false);
   const [cargando, setCargando] = useState<boolean>(false);
-  const router = useRouter()
+  const auth = useAuth()
 
   const {
     control,
@@ -48,29 +46,14 @@ export default function Login() {
   });
 
   const onSubmit = async (dataForm: IInputForm) => {
-    setCargando(true)
-    setErrorMsg(false);
-    try {
-      const { data: credenciales } = await instanceAxiosPropia.post("/login", dataForm);
-      const { data: token } = await instanceAxiosPropia.post("/token", credenciales);
-      router.push('/home')
-      delete credenciales.password;
-      const user: IUsuario ={
-        ...credenciales,
-        token
-      };
-      window.localStorage.setItem(USER_DATA, JSON.stringify(user));
-    } catch (err) {
-      setErrorMsg(true);
-    }finally{
-      setCargando(false)
-    }
+    auth.login(dataForm, setCargando, setErrorMsg)
   };
 
   useEffect(() => {
     reset()
-    window.localStorage.removeItem(USER_DATA);
-    window.localStorage.removeItem(ITEM_MENU);
+    window.localStorage.clear()
+    auth.setUser(null)
+    auth.setToken(null)
   }, [])
   
 
