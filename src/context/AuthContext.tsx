@@ -57,6 +57,9 @@ const AuthProvider = ({ children }: Props) => {
           })
           .then(async response => {
             setLoading(false)
+            const dataResp = { ...response.data.userData }
+            setToken(dataResp.token)
+            delete dataResp.token
             setUser({ ...response.data.userData })
           })
           .catch(() => {
@@ -88,9 +91,12 @@ const AuthProvider = ({ children }: Props) => {
           })
           .then(async response => {
             const returnUrl = router.query.returnUrl
-
+            const dataResp = { ...response.data.userData }
+            setToken(dataResp.token)
+            delete dataResp.token
             setUser({ ...response.data.userData })
-            await window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
+
+            window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
 
             const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
 
@@ -104,6 +110,7 @@ const AuthProvider = ({ children }: Props) => {
 
   const handleLogout = () => {
     setUser(null)
+    setToken(null)
     setIsInitialized(false)
     window.localStorage.clear()
     router.push('/login')

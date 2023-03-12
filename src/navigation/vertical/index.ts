@@ -1,6 +1,5 @@
 // ** Icon imports
-import HomeOutline from 'mdi-material-ui/HomeOutline'
-import EmailOutline from 'mdi-material-ui/EmailOutline'
+import { HomeOutline, FormatListBulleted, AccountPlus, AccountEdit } from 'mdi-material-ui'
 import ShieldOutline from 'mdi-material-ui/ShieldOutline'
 
 // ** Type import
@@ -9,17 +8,27 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 const navigation = (): VerticalNavItemsType => {
   return [
     {
-      title: 'Home',
+      title: 'Inicio',
       icon: HomeOutline,
       path: '/home'
     },
     {
-      title: 'Second Page',
-      icon: EmailOutline,
+      title: 'Listado de personas',
+      icon: FormatListBulleted,
+      path: '/gestor-personas/listado'
+    },
+    {
+      title: 'Añadir una persona',
+      icon: AccountPlus,
       path: '/second-page'
     },
     {
-      title: 'Access Control',
+      title: 'Editar una persona',
+      icon: AccountEdit,
+      path: '/second-page'
+    },
+    {
+      title: 'acl',
       icon: ShieldOutline,
       path: '/acl',
       action: 'read',
