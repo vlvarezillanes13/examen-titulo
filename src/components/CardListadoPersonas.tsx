@@ -7,7 +7,13 @@ import { IPersona } from 'src/interfaces'
 import Swal from 'sweetalert2'
 import { useAuth } from '../hooks/useAuth'
 import { validarToken } from '../helpers/index'
-import { instanceMiddlewareApi } from '../axios/index';
+import { instanceMiddlewareApi } from '../axios/index'
+
+import FileSaver from 'file-saver'
+
+import * as XLSX from 'xlsx'
+
+import { useRouter } from 'next/router'
 
 export const CardListadoPersonas = () => {
   const columnsGrid: GridColDef[] = [
@@ -92,18 +98,24 @@ export const CardListadoPersonas = () => {
   const [cargando, setCargando] = useState<boolean>(false)
   const [row, setRow] = useState<number>(10)
   const auth = useAuth()
+  const router = useRouter()
 
   const obtenerPersonas = async () => {
     setCargando(true)
     try {
-      if (!validarToken(auth.token || '')){
-        const { data:dataTKN, status:statusTKN } = await instanceMiddlewareApi.post('/token', auth.user)
-        if(statusTKN == 200) auth.setToken(dataTKN)
+      let tkn = auth.token
+
+      if (!validarToken(auth.token || '')) {
+        const { data: dataTKN, status: statusTKN } = await instanceMiddlewareApi.post('/token', auth.user)
+        if (statusTKN == 200) {
+          auth.setToken(dataTKN)
+          tkn = dataTKN
+        }
       }
       process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
       const { data } = await instanceMiddleware.get('/Persona/ObtenerPersonas', {
         headers: {
-          Authorization: `Bearer ${auth.token}`
+          Authorization: `Bearer ${tkn || auth.token}`
         }
       })
       if (data) {
@@ -112,17 +124,24 @@ export const CardListadoPersonas = () => {
         Swal.fire({
           title: 'Error al obtener listado de personas',
           icon: 'error',
+          text: data,
           confirmButtonText: 'OK'
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('Error', error)
+      Swal.fire({
+        title: 'Error obtener listado de personas',
+        icon: 'error',
+        text: error.message,
+        confirmButtonText: 'OK'
+      })
     } finally {
       setCargando(false)
     }
   }
 
-  const deleteHoraMedica = async (idHoraMed: string) => {
+  const deleteHoraMedica = async (id: string) => {
     try {
       Swal.fire({
         title: '¿ELIMINAR EL REGISTRO?',
@@ -133,20 +152,71 @@ export const CardListadoPersonas = () => {
         cancelButtonText: 'Cancelar'
       }).then(async (result: any) => {
         if (result.isConfirmed) {
-          const { data: DataEliminar } = await instanceMiddleware.delete(
-            `/GestionSalud/EliminaReservaHora/${idHoraMed}`
-          )
-
-          if (DataEliminar) {
-            Swal.fire('Eliminado', ``, 'success')
+          let tkn = auth.token
+          if (!validarToken(auth.token || '')) {
+            const { data: dataTKN, status: statusTKN } = await instanceMiddlewareApi.post('/token', auth.user)
+            if (statusTKN == 200) {
+              auth.setToken(dataTKN)
+              tkn = dataTKN
+            }
           }
+          process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+          const { data } = await instanceMiddleware.delete(`/Persona/EliminarPersona/${id}`, {
+            headers: {
+              Authorization: `Bearer ${tkn || auth.token}`
+            }
+          })
 
-          obtenerPersonas()
+          if (data) {
+            Swal.fire({
+              title: 'Elminado exitoso',
+              icon: 'success',
+              text: `De: ${data.nombres} ${data.apellidoPaterno} ${data.apellidoMaterno}`,
+              confirmButtonText: 'OK'
+            })
+            obtenerPersonas()
+          } else {
+            Swal.fire({
+              title: 'Error al eliminar registro',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            })
+          }
         }
       })
     } catch (error: any) {
       console.log('Descripción error:', error)
+      Swal.fire({
+        title: 'Error al agregar personas',
+        icon: 'error',
+        text: error.response.data,
+        confirmButtonText: 'OK'
+      })
     }
+  }
+
+  const exportToExcel = () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+    const fileExtension = '.xlsx'
+    const newData: any[] = listPersonas.map((x: IPersona) => {
+      const newX = {
+        Rut: x.rut,
+        DV: x.dv,
+        Nombres: x.nombres,
+        ['Apellido Paterno']: x.apellidoPaterno,
+        ['Apellido Materno']: x.apellidoMaterno,
+        Edad: x.edad,
+        Correo: x.correo
+      }
+
+      return newX
+    })
+
+    const ws = XLSX.utils.json_to_sheet(newData)
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] }
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+    const data = new Blob([excelBuffer], { type: fileType })
+    FileSaver.saveAs(data, 'Listado_Personas_'+`${new Date().toISOString().split('T')[0]}`+ fileExtension)
   }
 
   useEffect(() => {
@@ -155,7 +225,7 @@ export const CardListadoPersonas = () => {
 
   return (
     <Card sx={{ mb: 5, position: 'relative' }}>
-      <CardHeader title={`Horas Médicas`} />
+      <CardHeader title='Lista de Personas' />
       <Box
         sx={{
           position: 'absolute',
@@ -163,11 +233,22 @@ export const CardListadoPersonas = () => {
           right: 10
         }}
       >
-        <Button color='success'>Añadir una Persona</Button>
+        <Button color='success' onClick={ () => router.push('/gestor-personas/agregar/')}>Añadir una Persona</Button>
+      </Box>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 10,
+          right: 250
+        }}
+      >
+        <Button color='success' onClick={exportToExcel}>
+          Exportar a Excel
+        </Button>
       </Box>
       <CardContent sx={{ pt: theme => `${theme.spacing(2.5)} !important` }}>
-        {!cargando ? (
-          <Grid container spacing={5}>
+        <Grid container spacing={5}>
+          {!cargando ? (
             <Grid item xs={12}>
               <DataGrid
                 sx={{ height: '500px' }}
@@ -181,10 +262,14 @@ export const CardListadoPersonas = () => {
                 getRowId={row => row.id}
               />
             </Grid>
-          </Grid>
-        ) : (
-          <CircularProgress />
-        )}
+          ) : (
+            <Grid item xs={12}>
+              <Box textAlign='center'>
+                <CircularProgress />
+              </Box>
+            </Grid>
+          )}
+        </Grid>
       </CardContent>
     </Card>
   )

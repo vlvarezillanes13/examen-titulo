@@ -1,7 +1,8 @@
+import { CardBuscarPersona } from "src/components";
 
 const index = () => {
   return (
-    <div>index</div>
+    <CardBuscarPersona />
   )
 }
 

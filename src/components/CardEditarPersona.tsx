@@ -9,21 +9,25 @@ import {
   Grid,
   TextField
 } from '@mui/material'
-import { BookmarkAdd } from '@mui/icons-material'
+import { Edit } from '@mui/icons-material'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
-import { useState } from 'react'
+import { useState, useEffect, Dispatch, SetStateAction } from 'react'
 import { validarToken } from '../helpers'
 import { instanceMiddleware, instanceMiddlewareApi } from 'src/axios'
 import Swal from 'sweetalert2'
 import { useAuth } from 'src/hooks/useAuth'
+import { IPersona } from '../interfaces'
 
-export const CardAgregarPersona = () => {
 
-  
+type Props = {
+  personaProps: IPersona
+  setPersona: Dispatch<SetStateAction<IPersona | null>>
+}
 
-  const schemaYupPersona = yup.object({
+export const CardEditarPersona = ({ personaProps, setPersona}: Props) => {
+  const schemaYup = yup.object({
     Rut: yup.string().required('RUT es requerido').typeError('RUT es requerido'),
     Dv: yup.string().required('Dígito Verficador es requerido').typeError('Dígito Verficador es requerido'),
     Nombres: yup.string().required('Nombres es requerido').typeError('Nombres es requirido'),
@@ -51,9 +55,10 @@ export const CardAgregarPersona = () => {
     handleSubmit,
     control,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<IFormInputs>({
-    resolver: yupResolver(schemaYupPersona)
+    resolver: yupResolver(schemaYup)
   })
 
   const [cargando, setCargando] = useState<boolean>(false)
@@ -70,23 +75,29 @@ export const CardAgregarPersona = () => {
           tkn = dataTKN
         }
       }
+      const updateUser = {
+        ...dataForm,
+        Id: personaProps.id
+      }
+
       process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
-      const { data } = await instanceMiddleware.post('/Persona/AgregarPersona', dataForm, {
+      const { data } = await instanceMiddleware.put('/Persona/ActualizarPersona', updateUser, {
         headers: {
           Authorization: `Bearer ${tkn || auth.token}`
         }
       })
       if (data) {
         Swal.fire({
-          title: 'Guardado exitoso',
+          title: 'Cambio exitoso',
           icon: 'success',
           text: `De: ${data.nombres} ${data.apellidoPaterno} ${data.apellidoMaterno}`,
           confirmButtonText: 'OK'
         })
         reset()
+        setPersona(null)
       } else {
         Swal.fire({
-          title: 'Error al agregar personas',
+          title: 'Error al actualizar persona',
           icon: 'error',
           confirmButtonText: 'OK'
         })
@@ -94,9 +105,9 @@ export const CardAgregarPersona = () => {
     } catch (error: any) {
       console.log('Error', error)
       Swal.fire({
-        title: 'Error al agregar personas',
+        title: 'Error al actualizar persona',
         icon: 'error',
-        text: error.response.data,
+        text: error.message,
         confirmButtonText: 'OK'
       })
     } finally {
@@ -104,16 +115,35 @@ export const CardAgregarPersona = () => {
     }
   }
 
+  const cargarInformacion = (persona: IPersona) => {
+    setCargando(true)
+
+    setValue('Rut', persona?.rut || '')
+    setValue('Dv', persona?.dv || '')
+    setValue('Nombres', persona?.nombres || '')
+    setValue('ApellidoPaterno', persona?.apellidoPaterno || '')
+    setValue('ApellidoMaterno', persona?.apellidoMaterno || '')
+    setValue('Edad', persona?.edad || 0)
+    setValue('Correo', persona?.correo || '')
+
+    setCargando(false)
+  }
+
+  useEffect(() => {
+    cargarInformacion(personaProps)
+  }, [])
+
   return (
     <Card sx={{ mb: 5 }}>
-      <CardHeader title='Formulario de Ingreso' />
+      <CardHeader title='Formulario de Edición' />
       <CardContent sx={{ pt: theme => `${theme.spacing(2.5)} !important` }}>
         <form onSubmit={handleSubmit(handleSubmitForm)}>
           <Grid container spacing={5}>
             {cargando ? (
               <Grid item xs={12}>
-                {' '}
-                <CircularProgress />{' '}
+                <Box textAlign='center'>
+                  <CircularProgress />
+                </Box>
               </Grid>
             ) : (
               <>
@@ -128,8 +158,7 @@ export const CardAgregarPersona = () => {
                         onChange={onChange}
                         value={value}
                         error={Boolean(errors.Rut)}
-                        placeholder='Ingrese RUT'
-                        type='number'
+                        inputProps={{ maxLength: 8 }}
                       />
                     )}
                   />
@@ -148,7 +177,6 @@ export const CardAgregarPersona = () => {
                         error={Boolean(errors.Dv)}
                         placeholder='Ingrese Dígito Verificador'
                         inputProps={{ maxLength: 1 }}
-                        type='number'
                       />
                     )}
                   />
@@ -250,8 +278,8 @@ export const CardAgregarPersona = () => {
                 </Grid>
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', height: '100%' }}>
-                    <Button variant='outlined' color='success' size='large' sx={{ height: '100%' }} type='submit'>
-                      <BookmarkAdd sx={{ mr: 1 }} />
+                    <Button variant='outlined' color='warning' size='large' sx={{ height: '100%' }} type='submit'>
+                      <Edit sx={{ mr: 1 }} />
                       Grabar Cambios
                     </Button>
                   </Box>

@@ -44,6 +44,7 @@
     "clsx": "1.1.1",
     "date-fns": "2.27.0",
     "draft-js": "0.11.7",
+    "file-saver": "^2.0.5",
     "firebase": "9.7.0",
     "i18next": "21.7.1",
     "i18next-browser-languagedetector": "6.1.2",
@@ -75,6 +76,7 @@
     "stylis": "4.0.10",
     "stylis-plugin-rtl": "2.1.1",
     "sweetalert2": "^11.7.3",
+    "xlsx": "^0.18.5",
     "yup": "0.32.9"
   },
   "devDependencies": {
