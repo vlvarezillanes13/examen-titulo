@@ -18,26 +18,33 @@ export const validarToken = (tkn: string) => {
 }
 
 export const calcularDigitoVerificador = (digits: string): string => {
+  const secuencia = [2, 3, 4, 5, 6, 7, 2, 3]
   let sum = 0
-  let mul = 2
 
-  let i = digits.length
-  while (i--) {
-    sum = sum + parseInt(digits.charAt(i)) * mul
-    if (mul % 7 === 0) {
-      mul = 2
-    } else {
-      mul++
-    }
+  for (let i = digits.length - 1; i >= 0; i--) {
+    const d = digits.charAt(i)
+    sum += parseInt(d) * secuencia[digits.length - (i + 1)]
   }
 
-  const res = sum % 11
+  const rest = 11 - (sum % 11)
 
-  if (res === 0) {
-    return '0'
-  } else if (res === 1) {
-    return 'k'
+  return rest === 11 ? '0' : rest === 10 ? 'K' : `${rest}`
+}
+
+export const formatearRut = (rut: string) => {
+  if (rut.length > 0) {
+    return rut.replace(/\./g, '').replace('-', '')
   }
 
-  return `${11 - res}`
+  return ''
+}
+
+export const validarRutRegexp = (rut: string) => {
+  const regexp = /^\d{1,2}\d{3}\d{3}$/g
+
+  return regexp.test(rut) ? true : false
+}
+
+export const escapeRegExp = (value: string): string => {
+  return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 }

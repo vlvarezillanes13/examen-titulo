@@ -18,6 +18,7 @@ import { validarToken } from '../helpers'
 import { instanceMiddleware, instanceMiddlewareApi } from 'src/axios'
 import Swal from 'sweetalert2'
 import { useAuth } from 'src/hooks/useAuth'
+import { validarRutRegexp, calcularDigitoVerificador } from '../helpers/index';
 
 export const CardAgregarPersona = () => {
 
@@ -51,12 +52,14 @@ export const CardAgregarPersona = () => {
     handleSubmit,
     control,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<IFormInputs>({
     resolver: yupResolver(schemaYupPersona)
   })
 
   const [cargando, setCargando] = useState<boolean>(false)
+  const [dv, setDv] = useState<string>('')
   const auth = useAuth()
 
   const handleSubmitForm = async (dataForm: IFormInputs) => {
@@ -104,6 +107,17 @@ export const CardAgregarPersona = () => {
     }
   }
 
+  const handleChangeDv = (newValue: any) => {
+    if (validarRutRegexp(newValue.target.value)) {
+      const newDv = calcularDigitoVerificador(newValue.target.value)
+      setValue('Dv', newDv)
+      setDv(newDv)
+    } else {
+      setDv('')
+      setValue('Dv', '')
+    }
+  }
+
   return (
     <Card sx={{ mb: 5 }}>
       <CardHeader title='Formulario de Ingreso' />
@@ -125,11 +139,14 @@ export const CardAgregarPersona = () => {
                       <TextField
                         fullWidth
                         label='RUT de la persona'
-                        onChange={onChange}
+                        onChange={(data) => {
+                          onChange(data)
+                          handleChangeDv(data)
+                        }}
                         value={value}
                         error={Boolean(errors.Rut)}
                         placeholder='Ingrese RUT'
-                        type='number'
+                        inputProps={{ maxLength: 8 }}
                       />
                     )}
                   />
@@ -139,16 +156,15 @@ export const CardAgregarPersona = () => {
                   <Controller
                     name='Dv'
                     control={control}
-                    render={({ field: { value, onChange } }) => (
+                    render={({ field: {  onChange } }) => (
                       <TextField
                         fullWidth
                         label='Dígito Verificador de la persona'
                         onChange={onChange}
-                        value={value}
+                        value={dv}
                         error={Boolean(errors.Dv)}
                         placeholder='Ingrese Dígito Verificador'
-                        inputProps={{ maxLength: 1 }}
-                        type='number'
+                        inputProps={{ readOnly: true }}
                       />
                     )}
                   />

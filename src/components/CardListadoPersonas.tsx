@@ -6,7 +6,7 @@ import { DeleteEmpty } from 'mdi-material-ui'
 import { IPersona } from 'src/interfaces'
 import Swal from 'sweetalert2'
 import { useAuth } from '../hooks/useAuth'
-import { validarToken } from '../helpers/index'
+import { validarToken, escapeRegExp } from '../helpers/index'
 import { instanceMiddlewareApi } from '../axios/index'
 
 import FileSaver from 'file-saver'
@@ -14,6 +14,7 @@ import FileSaver from 'file-saver'
 import * as XLSX from 'xlsx'
 
 import { useRouter } from 'next/router'
+import { ToolBarBase } from './datagrid'
 
 export const CardListadoPersonas = () => {
   const columnsGrid: GridColDef[] = [
@@ -95,8 +96,10 @@ export const CardListadoPersonas = () => {
   ]
 
   const [listPersonas, setListPersonas] = useState<IPersona[]>([])
+  const [listPersonasOrigen, setListPersonasOrigen] = useState<IPersona[]>([])
   const [cargando, setCargando] = useState<boolean>(false)
   const [row, setRow] = useState<number>(10)
+  const [buscar, setBuscar] = useState<string>('')
   const auth = useAuth()
   const router = useRouter()
 
@@ -120,6 +123,7 @@ export const CardListadoPersonas = () => {
       })
       if (data) {
         setListPersonas(data)
+        setListPersonasOrigen(data)
       } else {
         Swal.fire({
           title: 'Error al obtener listado de personas',
@@ -195,6 +199,10 @@ export const CardListadoPersonas = () => {
     }
   }
 
+  const agregarRouter = () => {
+    router.push('/gestor-personas/agregar/')
+  }
+
   const exportToExcel = () => {
     const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
     const fileExtension = '.xlsx'
@@ -216,7 +224,20 @@ export const CardListadoPersonas = () => {
     const wb = { Sheets: { data: ws }, SheetNames: ['data'] }
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
     const data = new Blob([excelBuffer], { type: fileType })
-    FileSaver.saveAs(data, 'Listado_Personas_'+`${new Date().toISOString().split('T')[0]}`+ fileExtension)
+    FileSaver.saveAs(data, 'Listado_Personas_' + `${new Date().toISOString().split('T')[0]}` + fileExtension)
+  }
+
+  const requestSearch = (texto: string) => {
+    setBuscar(texto)
+    const searchRegex = new RegExp(escapeRegExp(texto), 'i')
+    const FilasFiltradas = listPersonasOrigen.filter((row: any) => {
+      return Object.keys(row).some((field: any) => {
+        if (row[field]) return searchRegex.test(row[field].toString())
+
+        return false
+      })
+    })
+    setListPersonas(FilasFiltradas)
   }
 
   useEffect(() => {
@@ -226,26 +247,6 @@ export const CardListadoPersonas = () => {
   return (
     <Card sx={{ mb: 5, position: 'relative' }}>
       <CardHeader title='Lista de Personas' />
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 10,
-          right: 10
-        }}
-      >
-        <Button color='success' onClick={ () => router.push('/gestor-personas/agregar/')}>Añadir una Persona</Button>
-      </Box>
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 10,
-          right: 250
-        }}
-      >
-        <Button color='success' onClick={exportToExcel}>
-          Exportar a Excel
-        </Button>
-      </Box>
       <CardContent sx={{ pt: theme => `${theme.spacing(2.5)} !important` }}>
         <Grid container spacing={5}>
           {!cargando ? (
@@ -260,6 +261,16 @@ export const CardListadoPersonas = () => {
                 localeText={esES.components.MuiDataGrid.defaultProps.localeText}
                 pagination
                 getRowId={row => row.id}
+                components={{ Toolbar: ToolBarBase }}
+                componentsProps={{
+                  toolbar: {
+                    value: buscar,
+                    onChange: (event: React.ChangeEvent<HTMLInputElement>) => requestSearch(event.target.value),
+                    clearSearch: () => requestSearch(''),
+                    exportToExcel,
+                    agregar: agregarRouter
+                  }
+                }}
               />
             </Grid>
           ) : (

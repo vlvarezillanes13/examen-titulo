@@ -21,6 +21,7 @@ import Swal from 'sweetalert2'
 import { useAuth } from 'src/hooks/useAuth'
 import { IPersona } from '../interfaces'
 import { CardEditarPersona } from './CardEditarPersona'
+import { formatearRut, calcularDigitoVerificador, validarRutRegexp } from 'src/helpers'
 
 export const CardBuscarPersona = () => {
   const schemaYup = yup.object({
@@ -37,14 +38,31 @@ export const CardBuscarPersona = () => {
     handleSubmit,
     control,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<IFormInputs>({
     resolver: yupResolver(schemaYup)
   })
 
   const [cargando, setCargando] = useState<boolean>(false)
   const [persona, setPersona] = useState<IPersona | null>(null)
+  const [rut, setRut] = useState<string>('')
+  const [dv, setDv] = useState<string>('')
   const auth = useAuth()
+
+  const handleChangeRut = (newValue: any) => {
+    const newRut = formatearRut(newValue.target.value)
+    setValue('Rut', newRut)
+    setRut(newRut)
+    if (validarRutRegexp(newRut)) {
+      const newDv = calcularDigitoVerificador(newRut)
+      setValue('Dv', newDv)
+      setDv(newDv)
+    } else {
+      setValue('Dv', '')
+      setDv('')
+    }
+  }
 
   const handleSubmitForm = async (dataForm: IFormInputs) => {
     setCargando(true)
@@ -94,8 +112,11 @@ export const CardBuscarPersona = () => {
   }
 
   useEffect(() => {
-    if (!persona) reset()
-  }, [persona, reset])
+    if (!persona) {
+      reset()
+      setRut('')
+    }
+  }, [persona])
 
   return (
     <>
@@ -116,12 +137,12 @@ export const CardBuscarPersona = () => {
                     <Controller
                       name='Rut'
                       control={control}
-                      render={({ field: { value, onChange } }) => (
+                      render={() => (
                         <TextField
                           fullWidth
                           label='RUT de la persona'
-                          onChange={onChange}
-                          value={value}
+                          onChange={handleChangeRut}
+                          value={rut}
                           error={Boolean(errors.Rut)}
                           placeholder='Ingrese RUT'
                           inputProps={{ maxLength: 8 }}
@@ -134,15 +155,15 @@ export const CardBuscarPersona = () => {
                     <Controller
                       name='Dv'
                       control={control}
-                      render={({ field: { value, onChange } }) => (
+                      render={({ field: { onChange } }) => (
                         <TextField
                           fullWidth
                           label='Dígito Verificador de la persona'
                           onChange={onChange}
-                          value={value}
+                          value={dv}
                           error={Boolean(errors.Dv)}
                           placeholder='Ingrese Dígito Verificador'
-                          inputProps={{ maxLength: 1 }}
+                          inputProps={{ readOnly: true }}
                         />
                       )}
                     />
