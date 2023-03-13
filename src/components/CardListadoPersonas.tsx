@@ -96,7 +96,6 @@ export const CardListadoPersonas = () => {
   const obtenerPersonas = async () => {
     setCargando(true)
     try {
-      console.log(auth.token)
       if (!validarToken(auth.token || '')){
         const { data:dataTKN, status:statusTKN } = await instanceMiddlewareApi.post('/token', auth.user)
         if(statusTKN == 200) auth.setToken(dataTKN)

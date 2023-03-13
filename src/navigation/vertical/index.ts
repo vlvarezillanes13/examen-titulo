@@ -20,12 +20,12 @@ const navigation = (): VerticalNavItemsType => {
     {
       title: 'Añadir una persona',
       icon: AccountPlus,
-      path: '/second-page'
+      path: '/gestor-personas/agregar'
     },
     {
       title: 'Editar una persona',
       icon: AccountEdit,
-      path: '/second-page'
+      path: '/gestor-personas/editar'
     },
     {
       title: 'acl',
