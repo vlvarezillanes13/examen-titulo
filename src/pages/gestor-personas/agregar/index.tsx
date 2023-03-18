@@ -1,9 +1,15 @@
-import { CardAgregarPersona } from "src/components";
+import Head from 'next/head'
+import { CardAgregarPersona } from 'src/components'
 
 const index = () => {
   return (
-    <CardAgregarPersona />
+    <>
+      <Head>
+        <title>Agregar Persona</title>
+        <CardAgregarPersona />
+      </Head>
+    </>
   )
 }
 
-export default index;
+export default index

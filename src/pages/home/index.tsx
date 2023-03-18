@@ -4,9 +4,14 @@ import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
+import Head from 'next/head';
 
 const Home = () => {
   return (
+    <>
+    <Head>
+    <title>Inicio</title>
+    </Head>
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
@@ -32,6 +37,7 @@ const Home = () => {
         </Card>
       </Grid>
     </Grid>
+    </>
   )
 }
 
