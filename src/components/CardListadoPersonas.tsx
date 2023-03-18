@@ -2,7 +2,7 @@ import { Box, Button, Card, CardContent, CardHeader, CircularProgress, Grid } fr
 import { DataGrid, esES, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { useEffect, useState } from 'react'
 import { instanceMiddleware } from 'src/axios'
-import { DeleteEmpty } from 'mdi-material-ui'
+import { DeleteEmpty, FileDownload } from 'mdi-material-ui'
 import { IPersona } from 'src/interfaces'
 import Swal from 'sweetalert2'
 import { useAuth } from '../hooks/useAuth'
@@ -85,11 +85,18 @@ export const CardListadoPersonas = () => {
         const { row } = params
 
         return (
+          <>
           <Box>
-            <Button sx={{ mt: 2, mb: 2, ml: 2 }} variant='text' color='error' onClick={() => deleteHoraMedica(row.id)}>
-              <DeleteEmpty />
+            <Button sx={{ mt: 2, mb: 2, ml: 2 }} variant='text' color='primary' onClick={() => descargarArchivo(row.rut,row.dv)}>
+              <FileDownload />
             </Button>
           </Box>
+          <Box>
+          <Button sx={{ mt: 2, mb: 2, ml: 2 }} variant='text' color='error' onClick={() => deleteRegistro(row.id)}>
+            <DeleteEmpty />
+          </Button>
+        </Box>
+        </>
         )
       }
     }
@@ -145,7 +152,58 @@ export const CardListadoPersonas = () => {
     }
   }
 
-  const deleteHoraMedica = async (id: string) => {
+  const descargarArchivo = async (rut: string, dv: string) => {
+    try {
+
+      let tkn = auth.token
+      if (!validarToken(auth.token || '')) {
+        const { data: dataTKN, status: statusTKN } = await instanceMiddlewareApi.post('/token', auth.user)
+        if (statusTKN == 200) {
+          auth.setToken(dataTKN)
+          tkn = dataTKN
+        }
+      }
+      process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+      const { data } = await instanceMiddleware.get(`/Persona/ObtenerArchivo/${rut}${dv}`, {
+        headers: {
+          Authorization: `Bearer ${tkn || auth.token}`,
+        },
+        responseType: 'blob'
+      })
+      console.log(data)
+      if (data) {
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `CV_${rut}${dv}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+
+        Swal.fire({
+          title: 'Archivo Encontrado',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        })
+      } else {
+        Swal.fire({
+          title: 'No se encontro archivo registrado',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
+      }
+        
+      
+    } catch (error: any) {
+      console.log('Descripción error:', error)
+      Swal.fire({
+        title: 'No se encontro archivo registrado',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      })
+    }
+  }
+
+  const deleteRegistro = async (id: string) => {
     try {
       Swal.fire({
         title: '¿ELIMINAR EL REGISTRO?',

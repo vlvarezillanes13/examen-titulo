@@ -7,7 +7,12 @@ import {
   CircularProgress,
   FormHelperText,
   Grid,
-  TextField
+  TextField,
+  List,
+  ListItem,
+  Typography,
+  IconButton,
+  TypographyProps
 } from '@mui/material'
 import { BookmarkAdd } from '@mui/icons-material'
 import * as yup from 'yup'
@@ -18,12 +23,12 @@ import { validarToken } from '../helpers'
 import { instanceMiddleware, instanceMiddlewareApi } from 'src/axios'
 import Swal from 'sweetalert2'
 import { useAuth } from 'src/hooks/useAuth'
-import { validarRutRegexp, calcularDigitoVerificador } from '../helpers/index';
+import { validarRutRegexp, calcularDigitoVerificador } from '../helpers/index'
+import Close from 'mdi-material-ui/Close'
+import { useDropzone } from 'react-dropzone'
+import { styled } from '@mui/material/styles'
 
 export const CardAgregarPersona = () => {
-
-  
-
   const schemaYupPersona = yup.object({
     Rut: yup.string().required('RUT es requerido').typeError('RUT es requerido'),
     Dv: yup.string().required('Dígito Verficador es requerido').typeError('Dígito Verficador es requerido'),
@@ -48,6 +53,12 @@ export const CardAgregarPersona = () => {
     Correo: string
   }
 
+  interface FileProp {
+    name: string
+    type: string
+    size: number
+  }
+
   const {
     handleSubmit,
     control,
@@ -60,7 +71,64 @@ export const CardAgregarPersona = () => {
 
   const [cargando, setCargando] = useState<boolean>(false)
   const [dv, setDv] = useState<string>('')
+  const [files, setFiles] = useState<File[]>([])
   const auth = useAuth()
+
+  const renderFilePreview = (file: FileProp) => {
+    if (file.type.startsWith('image')) {
+      return <img width={38} height={38} alt={file.name} src={URL.createObjectURL(file as any)} />
+    } else {
+      return <img width={38} height={38} src='/icons/file-icons/pdf.png' />
+    }
+  }
+
+  const fileList = files.map((file: FileProp) => (
+    <ListItem key={file.name}>
+      <div className='file-details'>
+        <div className='file-preview'>{renderFilePreview(file)}</div>
+        <div>
+          <Typography className='file-name'>{file.name}</Typography>
+          <Typography className='file-size' variant='body2'>
+            {Math.round(file.size / 100) / 10 > 1000
+              ? `${(Math.round(file.size / 100) / 10000).toFixed(1)} mb`
+              : `${(Math.round(file.size / 100) / 10).toFixed(1)} kb`}
+          </Typography>
+        </div>
+      </div>
+      <IconButton onClick={() => setFiles([])}>
+        <Close />
+      </IconButton>
+    </ListItem>
+  ))
+
+  const { getRootProps, getInputProps } = useDropzone({
+    multiple: false,
+    accept: {
+      'archive/*': ['.pdf']
+    },
+    onDrop: (acceptedFiles: File[]) => {
+      setFiles(acceptedFiles.map((file: File) => Object.assign(file)))
+    }
+  })
+
+  const Img = styled('img')(({ theme }) => ({
+    [theme.breakpoints.up('md')]: {
+      marginRight: theme.spacing(10)
+    },
+    [theme.breakpoints.down('md')]: {
+      marginBottom: theme.spacing(4)
+    },
+    [theme.breakpoints.down('sm')]: {
+      width: 250
+    }
+  }))
+
+  const HeadingTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    marginBottom: theme.spacing(5),
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: theme.spacing(4)
+    }
+  }))
 
   const handleSubmitForm = async (dataForm: IFormInputs) => {
     setCargando(true)
@@ -81,12 +149,39 @@ export const CardAgregarPersona = () => {
       })
       if (data) {
         Swal.fire({
-          title: 'Guardado exitoso',
+          title: 'Guardado exitoso de la persona',
           icon: 'success',
           text: `De: ${data.nombres} ${data.apellidoPaterno} ${data.apellidoMaterno}`,
           confirmButtonText: 'OK'
         })
+        if (files.length > 0) {
+          const archivo = new FormData()
+          archivo.append('archivo', files[0])
+          process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+          const { data: archivoData } = await instanceMiddleware.post(`/Persona/SubirArchivo/${data.rut}${data.dv}`, archivo, {
+            headers: {
+              Authorization: `Bearer ${tkn || auth.token}`,
+              ContentType: 'multipart/form-data'
+            }
+          })
+          if (archivoData) {
+            Swal.fire({
+              title: 'Guardado exitoso del archivo',
+              icon: 'success',
+              text: `Con nombre: DATA_${data.rut}${data.dv}.pdf`,
+              confirmButtonText: 'OK'
+            })
+          } else {
+            Swal.fire({
+              title: 'Error al subir archivo',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            })
+          }
+        }
         reset()
+        setDv('')
+        setFiles([])
       } else {
         Swal.fire({
           title: 'Error al agregar personas',
@@ -97,9 +192,9 @@ export const CardAgregarPersona = () => {
     } catch (error: any) {
       console.log('Error', error)
       Swal.fire({
-        title: 'Error al agregar personas',
+        title: 'Error en el proceso',
         icon: 'error',
-        text: error.response.data,
+        text: error.response.data.status,
         confirmButtonText: 'OK'
       })
     } finally {
@@ -139,7 +234,7 @@ export const CardAgregarPersona = () => {
                       <TextField
                         fullWidth
                         label='RUT de la persona'
-                        onChange={(data) => {
+                        onChange={data => {
                           onChange(data)
                           handleChangeDv(data)
                         }}
@@ -156,7 +251,7 @@ export const CardAgregarPersona = () => {
                   <Controller
                     name='Dv'
                     control={control}
-                    render={({ field: {  onChange } }) => (
+                    render={({ field: { onChange } }) => (
                       <TextField
                         fullWidth
                         label='Dígito Verificador de la persona'
@@ -264,6 +359,48 @@ export const CardAgregarPersona = () => {
                     <FormHelperText sx={{ color: 'error.main' }}>{errors.Correo.message}</FormHelperText>
                   )}
                 </Grid>
+                <Grid item xs={12}>
+                  <Box
+                    {...getRootProps({ className: 'dropzone' })}
+                    sx={
+                      files.length
+                        ? {
+                            height: 120,
+                            width: '100%',
+                            border: '5px dashed #DBDBDD',
+                            padding: '4px',
+                            display: 'flex',
+                            justifyContent: 'center'
+                          }
+                        : { border: '5px dashed #DBDBDD', padding: '4px' }
+                    }
+                  >
+                    <input {...getInputProps()} />
+                    {files.length ? (
+                      <Box>
+                        <List>{fileList}</List>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: ['column', 'column', 'row'],
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Img width={200} alt='Upload img' src='/images/misc/upload.png' />
+                        <Box
+                          sx={{ display: 'flex', flexDirection: 'column', textAlign: ['center', 'center', 'inherit'] }}
+                        >
+                          <HeadingTypography variant='h6'>Ingresa Curriculum en PDF</HeadingTypography>
+                          <Typography color='textSecondary'>Arrastra el archivo aquí o haz un click </Typography>
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                </Grid>
+
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', height: '100%' }}>
                     <Button variant='outlined' color='success' size='large' sx={{ height: '100%' }} type='submit'>

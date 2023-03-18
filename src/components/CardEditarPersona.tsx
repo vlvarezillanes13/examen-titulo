@@ -7,7 +7,12 @@ import {
   CircularProgress,
   FormHelperText,
   Grid,
-  TextField
+  TextField,
+  List,
+  ListItem,
+  Typography,
+  IconButton,
+  TypographyProps
 } from '@mui/material'
 import { Edit } from '@mui/icons-material'
 import * as yup from 'yup'
@@ -19,6 +24,9 @@ import { instanceMiddleware, instanceMiddlewareApi } from 'src/axios'
 import Swal from 'sweetalert2'
 import { useAuth } from 'src/hooks/useAuth'
 import { IPersona } from '../interfaces'
+import Close from 'mdi-material-ui/Close'
+import { useDropzone } from 'react-dropzone'
+import { styled } from '@mui/material/styles'
 
 
 type Props = {
@@ -51,6 +59,12 @@ export const CardEditarPersona = ({ personaProps, setPersona}: Props) => {
     Correo: string
   }
 
+  interface FileProp {
+    name: string
+    type: string
+    size: number
+  }
+
   const {
     handleSubmit,
     control,
@@ -62,7 +76,65 @@ export const CardEditarPersona = ({ personaProps, setPersona}: Props) => {
   })
 
   const [cargando, setCargando] = useState<boolean>(false)
+  const [files, setFiles] = useState<File[]>([])
   const auth = useAuth()
+
+  const renderFilePreview = (file: FileProp) => {
+    if (file.type.startsWith('image')) {
+      return <img width={38} height={38} alt={file.name} src={URL.createObjectURL(file as any)} />
+    } else {
+      return <img width={38} height={38} src='/icons/file-icons/pdf.png' />
+    }
+  }
+
+  const fileList = files.map((file: FileProp) => (
+    <ListItem key={file.name}>
+      <div className='file-details'>
+        <div className='file-preview'>{renderFilePreview(file)}</div>
+        <div>
+          <Typography className='file-name'>{file.name}</Typography>
+          <Typography className='file-size' variant='body2'>
+            {Math.round(file.size / 100) / 10 > 1000
+              ? `${(Math.round(file.size / 100) / 10000).toFixed(1)} mb`
+              : `${(Math.round(file.size / 100) / 10).toFixed(1)} kb`}
+          </Typography>
+        </div>
+      </div>
+      <IconButton onClick={() => setFiles([])}>
+        <Close />
+      </IconButton>
+    </ListItem>
+  ))
+
+  const { getRootProps, getInputProps } = useDropzone({
+    multiple: false,
+    accept: {
+      'archive/*': ['.pdf']
+    },
+    onDrop: (acceptedFiles: File[]) => {
+      setFiles(acceptedFiles.map((file: File) => Object.assign(file)))
+    }
+  })
+
+  const Img = styled('img')(({ theme }) => ({
+    [theme.breakpoints.up('md')]: {
+      marginRight: theme.spacing(10)
+    },
+    [theme.breakpoints.down('md')]: {
+      marginBottom: theme.spacing(4)
+    },
+    [theme.breakpoints.down('sm')]: {
+      width: 250
+    }
+  }))
+
+  const HeadingTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    marginBottom: theme.spacing(5),
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: theme.spacing(4)
+    }
+  }))
+
 
   const handleSubmitForm = async (dataForm: IFormInputs) => {
     setCargando(true)
@@ -276,6 +348,48 @@ export const CardEditarPersona = ({ personaProps, setPersona}: Props) => {
                     <FormHelperText sx={{ color: 'error.main' }}>{errors.Correo.message}</FormHelperText>
                   )}
                 </Grid>
+                <Grid item xs={12}>
+                  <Box
+                    {...getRootProps({ className: 'dropzone' })}
+                    sx={
+                      files.length
+                        ? {
+                            height: 120,
+                            width: '100%',
+                            border: '5px dashed #DBDBDD',
+                            padding: '4px',
+                            display: 'flex',
+                            justifyContent: 'center'
+                          }
+                        : { border: '5px dashed #DBDBDD', padding: '4px' }
+                    }
+                  >
+                    <input {...getInputProps()} />
+                    {files.length ? (
+                      <Box>
+                        <List>{fileList}</List>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: ['column', 'column', 'row'],
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Img width={200} alt='Upload img' src='/images/misc/upload.png' />
+                        <Box
+                          sx={{ display: 'flex', flexDirection: 'column', textAlign: ['center', 'center', 'inherit'] }}
+                        >
+                          <HeadingTypography variant='h6'>Ingresa Curriculum en PDF</HeadingTypography>
+                          <Typography color='textSecondary'>Arrastra el archivo aquí o haz un click </Typography>
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                </Grid>
+
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center', height: '100%' }}>
                     <Button variant='outlined' color='warning' size='large' sx={{ height: '100%' }} type='submit'>
