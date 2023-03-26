@@ -22,7 +22,7 @@ const defineRulesFor = (perfil: number, subject: string) => {
   if (perfil === 1) {
     can('manage', 'all')
   } else if (perfil === 2) {
-    can(['read'], 'acl-page')
+    can(['read'], 'home-page')
   } else {
     can(['read', 'create', 'update', 'delete'], subject)
   }

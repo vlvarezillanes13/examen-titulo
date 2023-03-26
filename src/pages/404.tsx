@@ -45,14 +45,14 @@ const Error404 = () => {
             404
           </Typography>
           <Typography variant='h5' sx={{ mb: 2.5, letterSpacing: '0.18px', fontSize: '1.5rem !important' }}>
-            Page Not Found ⚠️
+            Página no encontrada ⚠️
           </Typography>
-          <Typography variant='body2'>We couldn&prime;t find the page you are looking for.</Typography>
+          <Typography variant='body2'>No pudimos encontrar la página que está buscando.</Typography>
         </BoxWrapper>
         <Img alt='error-illustration' src='/images/pages/404.png' />
         <Link passHref href='/'>
           <Button component='a' variant='contained' sx={{ px: 5.5 }}>
-            Back to Home
+            Volver al inicio
           </Button>
         </Link>
       </Box>

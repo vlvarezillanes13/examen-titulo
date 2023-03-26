@@ -7,9 +7,11 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 const navigation = (): VerticalNavItemsType => {
   return [
     {
+      path: '/home',
+      action: 'read',
+      subject: 'home-page',
       title: 'Inicio',
-      icon: HomeOutline,
-      path: '/home'
+      icon: HomeOutline
     },
     {
       title: 'Listado de personas',
