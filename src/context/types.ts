@@ -16,6 +16,7 @@ export type UserDataType = {
   nombrePerfil: string
   username: string
   perfil: number
+  idPersona: number
 }
 
 export type AuthValuesType = {

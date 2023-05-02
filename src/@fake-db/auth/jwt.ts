@@ -26,7 +26,6 @@ mock.onPost('/jwt/login').reply(async request => {
   try {
     const { data, status } = await instanceMiddlewareApi.post('/login', dataRes)
     const { data:dataTKN, status:statusTKN } = await instanceMiddlewareApi.post('/token', data)
-
     if (status == 200 && statusTKN== 200) {
       const dataUserLocalStorage = {
         id: data.id,
@@ -34,9 +33,9 @@ mock.onPost('/jwt/login').reply(async request => {
         username: data.username,
         password: data.password,
         perfil: data.perfil,
-        token: dataTKN
+        token: dataTKN,
+        idPersona: data.idPersona
       }
-      
       const accessToken = jwt.sign(dataUserLocalStorage, jwtConfig.secret)
 
       const response = {
@@ -54,49 +53,6 @@ mock.onPost('/jwt/login').reply(async request => {
   }
 })
 
-// mock.onPost('/jwt/register').reply(request => {
-//   if (request.data.length > 0) {
-//     const { email, password, username } = JSON.parse(request.data)
-//     const isEmailAlreadyInUse = users.find(user => user.email === email)
-//     const isUsernameAlreadyInUse = users.find(user => user.username === username)
-//     const error = {
-//       email: isEmailAlreadyInUse ? 'This email is already in use.' : null,
-//       username: isUsernameAlreadyInUse ? 'This username is already in use.' : null
-//     }
-
-//     if (!error.username && !error.email) {
-//       const { length } = users
-//       let lastIndex = 0
-//       if (length) {
-//         lastIndex = users[length - 1].id
-//       }
-//       const userData = {
-//         id: lastIndex + 1,
-//         email,
-//         password,
-//         username,
-//         avatar: null,
-//         fullName: '',
-//         role: 'admin'
-//       }
-
-//       //users.push(userData)
-
-//       const accessToken = jwt.sign({ id: userData.id }, jwtConfig.secret)
-
-//       const user = { ...userData }
-//       delete user.password
-
-//       const response = { accessToken }
-
-//       return [200, response]
-//     }
-
-//     return [200, { error }]
-//   } else {
-//     return [401, { error: 'Invalid Data' }]
-//   }
-// })
 
 mock.onGet('/auth/me').reply(config => {
   // @ts-ignore

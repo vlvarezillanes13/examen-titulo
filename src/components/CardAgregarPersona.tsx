@@ -221,8 +221,7 @@ export const CardAgregarPersona = () => {
           <Grid container spacing={5}>
             {cargando ? (
               <Grid item xs={12}>
-                {' '}
-                <CircularProgress />{' '}
+                <CircularProgress />
               </Grid>
             ) : (
               <>

@@ -6,10 +6,15 @@ const index = () => {
     <>
       <Head>
         <title>Agregar Persona</title>
-        <CardAgregarPersona />
       </Head>
+      <CardAgregarPersona />
     </>
   )
+}
+
+index.acl = {
+  action: 'read',
+  subject: 'agregar'
 }
 
 export default index

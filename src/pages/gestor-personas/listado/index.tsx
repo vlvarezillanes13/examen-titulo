@@ -12,4 +12,9 @@ const index = () => {
   )
 }
 
+index.acl = {
+  action: 'read',
+  subject: 'listado'
+}
+
 export default index;

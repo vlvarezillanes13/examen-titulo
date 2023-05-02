@@ -123,12 +123,12 @@ const UserDropdown = (props: Props) => {
                 flexDirection: 'column'
               }}
             >
-              <Typography sx={{ fontWeight: 600 }}>{ user?.username }</Typography>
+              <Typography sx={{ fontWeight: 600 }}>{ user?.username.toUpperCase() }</Typography>
               <Typography
                 variant='body2'
                 sx={{ fontSize: '0.8rem', color: 'text.disabled' }}
               >
-                { user?.nombrePerfil }
+                { user?.nombrePerfil.toUpperCase() }
               </Typography>
             </Box>
           </Box>
